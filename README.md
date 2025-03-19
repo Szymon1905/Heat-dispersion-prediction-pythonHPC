@@ -1,4 +1,8 @@
 # PythonHPC-project
-Repository for project for Python HPC at DTU
+Repository for mini-project for Python high performance computing course at DTU
 
-k
+Authors:
+Kristine Rigmor Agergaard Andersen
+Nojan Rezvani
+Szymon Borzdynski
+Rasmus Bredahl Kindler
