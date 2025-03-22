@@ -13,7 +13,7 @@ def load_data(load_dir, bid):
     interior_mask = np.load(join(load_dir, f"{bid}_interior.npy"))
     return u, interior_mask
 
-
+@profile
 def jacobi(u, interior_mask, max_iter, atol=1e-6):
     u = np.copy(u)
 
@@ -94,3 +94,6 @@ if __name__ == '__main__':
         for bid, u, interior_mask in zip(building_ids, all_u, all_interior_mask):
             stats = summary_stats(u, interior_mask)
             writer.writerow([bid] + [stats[k] for k in stat_keys])
+
+# Run below to see the profile
+# kernprof -l -v simulate_kernprof.py
