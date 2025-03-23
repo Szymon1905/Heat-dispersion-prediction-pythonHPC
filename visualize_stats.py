@@ -2,6 +2,7 @@ import subprocess
 import pandas as pd
 from pyarrow import csv
 import sys
+import os
 
 # Load the stats
 def pyarrow_load(file):
@@ -11,7 +12,10 @@ def pyarrow_load(file):
 
 
 # Run the simulate.py script and get the stats.csv file
-subprocess.run([sys.executable, "simulate.py"])
+if not os.path.exists("stats.csv"):
+    subprocess.run([sys.executable, "simulate.py"])
+
+# subprocess.run([sys.executable, "simulate.py"])
 stats = pyarrow_load("stats.csv")
 
 
@@ -44,3 +48,6 @@ ax3.set_title('Percentage Below 15')
 
 plt.tight_layout()
 plt.show()
+
+# Save the figure
+fig.savefig("stats.png")

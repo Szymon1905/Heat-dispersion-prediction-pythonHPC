@@ -87,10 +87,13 @@ if __name__ == '__main__':
 
 
     # Save summary statistics in CSV format
-    csv_file = 'stats.csv'
-    with open(csv_file, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['building_id'] + stat_keys)  # CSV header
-        for bid, u, interior_mask in zip(building_ids, all_u, all_interior_mask):
-            stats = summary_stats(u, interior_mask)
-            writer.writerow([bid] + [stats[k] for k in stat_keys])
+    to_csv = False
+
+    if to_csv:
+        csv_file = 'stats.csv'
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['building_id'] + stat_keys) 
+            for bid, u, interior_mask in zip(building_ids, all_u, all_interior_mask):
+                stats = summary_stats(u, interior_mask)
+                writer.writerow([bid] + [stats[k] for k in stat_keys])

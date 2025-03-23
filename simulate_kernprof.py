@@ -85,15 +85,5 @@ if __name__ == '__main__':
         stats = summary_stats(u, interior_mask)
         print(f"{bid},", ", ".join(str(stats[k]) for k in stat_keys))
 
-
-    # Save summary statistics in CSV format
-    csv_file = 'stats.csv'
-    with open(csv_file, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['building_id'] + stat_keys)  # CSV header
-        for bid, u, interior_mask in zip(building_ids, all_u, all_interior_mask):
-            stats = summary_stats(u, interior_mask)
-            writer.writerow([bid] + [stats[k] for k in stat_keys])
-
 # Run below to see the profile
 # kernprof -l -v simulate_kernprof.py
