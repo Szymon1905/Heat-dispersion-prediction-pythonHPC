@@ -1,6 +1,6 @@
 from os.path import join
 import sys
-
+import multiprocessing
 import numpy as np
 
 LOCAL = True
@@ -42,6 +42,34 @@ def summary_stats(u, interior_mask):
         'pct_below_15': pct_below_15,
     }
 
+def original_jacobi(chunks_u,chunks_mask,MAX_ITER, ABS_TOL):
+    all_u = np.empty_like(chunks_u)
+    for i, (u0, interior_mask) in enumerate(zip(chunks_u,chunks_mask)):
+        u = jacobi(u0, interior_mask, MAX_ITER, ABS_TOL)
+        all_u[i] = u
+    return all_u
+
+def static_parallel(all_u0, all_interior_mask,MAX_ITER, ABS_TOL, num_processes):
+    #chunk_size = len(points)//(num_processes*2)
+    chunks_length = num_processes
+    chunks_u = np.array_split(all_u0,chunks_length)
+    chunks_mask = np.array_split(all_interior_mask,chunks_length)
+
+
+
+    pool = multiprocessing.Pool(num_processes)
+
+    
+    results_async = [pool.apply_async(original_jacobi, (chunks_u[i],chunks_mask[i],MAX_ITER, ABS_TOL))
+                    for i in range(chunks_length)]
+
+    
+    
+    arr = np.concatenate([r.get() for r in results_async])
+
+    
+
+    return arr
 
 if __name__ == '__main__':
     # Load data
@@ -72,11 +100,17 @@ if __name__ == '__main__':
     # Run jacobi iterations for each floor plan
     MAX_ITER = 20_000
     ABS_TOL = 1e-4
+    num_processes = 4
 
-    all_u = np.empty_like(all_u0)
-    for i, (u0, interior_mask) in enumerate(zip(all_u0, all_interior_mask)):
-        u = jacobi(u0, interior_mask, MAX_ITER, ABS_TOL)
-        all_u[i] = u
+
+    #all_u = original_jacobi(all_u0, all_interior_mask,MAX_ITER, ABS_TOL)
+    all_u = static_parallel(all_u0, all_interior_mask,MAX_ITER, ABS_TOL,num_processes)
+
+
+    #all_u = np.empty_like(all_u0)
+    #for i, (u0, interior_mask) in enumerate(zip(all_u0, all_interior_mask)):
+    #    u = jacobi(u0, interior_mask, MAX_ITER, ABS_TOL)
+    #    all_u[i] = u
 
     # Print summary statistics in CSV format
     stat_keys = ['mean_temp', 'std_temp', 'pct_above_18', 'pct_below_15']
