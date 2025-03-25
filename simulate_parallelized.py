@@ -1,10 +1,14 @@
 from os.path import join
-import sys
 import numpy as np
 import csv
+import sys
+from multiprocessing import Pool, cpu_count
 
-LOCAL = True
+LOCAL = False
 to_csv = False
+
+LOAD_DIR = '/dtu/projects/02613_2025/data/modified_swiss_dwellings/'
+LOAD_DIR = "buildings/" if LOCAL else LOAD_DIR
 
 
 def load_data(load_dir, bid):
@@ -19,7 +23,6 @@ def jacobi(u, interior_mask, max_iter, atol=1e-6):
     u = np.copy(u)
 
     for i in range(max_iter):
-        # Compute average of left, right, up and down neighbors, see eq. (1)
         u_new = 0.25 * (u[1:-1, :-2] + u[1:-1, 2:] + u[:-2, 1:-1] + u[2:, 1:-1])
         u_new_interior = u_new[interior_mask]
         delta = np.abs(u[1:-1, 1:-1][interior_mask] - u_new_interior).max()
@@ -44,15 +47,14 @@ def summary_stats(u, interior_mask):
     }
 
 
+def process_building(bid):
+    u0, interior_mask = load_data(LOAD_DIR, bid)
+    u = jacobi(u0, interior_mask, max_iter=20_000, atol=1e-4)
+    stats = summary_stats(u, interior_mask)
+    return bid, stats
+
+
 if __name__ == '__main__':
-    # Load data
-    
-    LOAD_DIR = '/dtu/projects/02613_2025/data/modified_swiss_dwellings/'
-
-    ##### FOR TESTING
-    LOAD_DIR = "buildings/" if LOCAL else LOAD_DIR
-
-
     with open(join(LOAD_DIR, 'building_ids.txt'), 'r') as f:
         building_ids = f.read().splitlines()
 
@@ -60,39 +62,23 @@ if __name__ == '__main__':
         N = 5
     else:
         N = int(sys.argv[1])
+
     building_ids = building_ids[:N]
 
-    # Load floor plans
-    all_u0 = np.empty((N, 514, 514))
-    all_interior_mask = np.empty((N, 512, 512), dtype='bool')
-    for i, bid in enumerate(building_ids):
-        u0, interior_mask = load_data(LOAD_DIR, bid)
-        all_u0[i] = u0
-        all_interior_mask[i] = interior_mask
+    num_workers = int(sys.argv[2]) #min(cpu_count(), N)
+    chunk_size = (N + num_workers - 1) // num_workers  # static scheduling
 
-    # Run jacobi iterations for each floor plan
-    MAX_ITER = 20_000
-    ABS_TOL = 1e-4
+    with Pool(processes=num_workers) as pool:
+        results = pool.map(process_building, building_ids, chunksize=chunk_size)
 
-    all_u = np.empty_like(all_u0)
-    for i, (u0, interior_mask) in enumerate(zip(all_u0, all_interior_mask)):
-        u = jacobi(u0, interior_mask, MAX_ITER, ABS_TOL)
-        all_u[i] = u
-
-    # Print summary statistics in CSV format
     stat_keys = ['mean_temp', 'std_temp', 'pct_above_18', 'pct_below_15']
-    print('building_id, ' + ', '.join(stat_keys))  # CSV header
-    for bid, u, interior_mask in zip(building_ids, all_u, all_interior_mask):
-        stats = summary_stats(u, interior_mask)
+    print('building_id, ' + ', '.join(stat_keys))
+    for bid, stats in results:
         print(f"{bid},", ", ".join(str(stats[k]) for k in stat_keys))
 
-
-    # Save summary statistics in CSV format
     if to_csv:
-        csv_file = 'stats.csv'
-        with open(csv_file, mode='w', newline='') as file:
+        with open('stats.csv', mode='w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['building_id'] + stat_keys) 
-            for bid, u, interior_mask in zip(building_ids, all_u, all_interior_mask):
-                stats = summary_stats(u, interior_mask)
+            writer.writerow(['building_id'] + stat_keys)
+            for bid, stats in results:
                 writer.writerow([bid] + [stats[k] for k in stat_keys])
