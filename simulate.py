@@ -2,9 +2,12 @@ from os.path import join
 import sys
 import multiprocessing
 import numpy as np
+import csv
 
 LOCAL = True
-
+CSV = False
+if (len(sys.argv) > 3):
+    CSV = True if sys.argv[3].lower() == "y" else False
 
 def load_data(load_dir, bid):
     SIZE = 512
@@ -100,7 +103,7 @@ if __name__ == '__main__':
     # Run jacobi iterations for each floor plan
     MAX_ITER = 20_000
     ABS_TOL = 1e-4
-    num_processes = 4
+    num_processes = int(sys.argv[2])
 
 
     #all_u = original_jacobi(all_u0, all_interior_mask,MAX_ITER, ABS_TOL)
@@ -113,8 +116,20 @@ if __name__ == '__main__':
     #    all_u[i] = u
 
     # Print summary statistics in CSV format
+    data = []
+
     stat_keys = ['mean_temp', 'std_temp', 'pct_above_18', 'pct_below_15']
-    print('building_id, ' + ', '.join(stat_keys))  # CSV header
+    header = ['building_id'] +stat_keys
+    print(header)  # CSV header
     for bid, u, interior_mask in zip(building_ids, all_u, all_interior_mask):
         stats = summary_stats(u, interior_mask)
         print(f"{bid},", ", ".join(str(stats[k]) for k in stat_keys))
+        stats.update({"building_id": bid})
+        data.append(stats)
+    
+    # if CSV option is true
+    if (CSV):
+        with open('floorplan_results.csv', 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=header)
+            writer.writeheader()
+            writer.writerows(data)
