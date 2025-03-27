@@ -2,8 +2,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import sys
 
-f = open("task4.txt", "r")
+task = sys.argv[1]
+
+f = open(task, "r")
 
 lines = f.readlines()
 f.close()
@@ -19,9 +22,9 @@ y = np.array(y)
 y = y[0]/y
 plt.plot(x,y, marker='o', linestyle='--')
 plt.grid(which='both', linestyle='--', linewidth=0.7, alpha=0.7)
-plt.yticks(np.arange(1,6))
+plt.yticks(np.arange(1, max(y)+1))
 plt.xlabel("Number of processors")
 plt.ylabel("Speedup")
-plt.title("Speedup vs Number of processors")
-plt.savefig("speedup.png")
+plt.title(f"{task[:-4]}: Speedup vs Number of processors")
+plt.savefig(f"{task[:-4]}.png")
 

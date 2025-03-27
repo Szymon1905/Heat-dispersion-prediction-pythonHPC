@@ -79,7 +79,7 @@ if __name__ == '__main__':
         all_interior_mask[i] = interior_mask
 
 
-    chunksize = max(N//num_processes,1)
+    chunksize = 1 # Keep chunksize as 1 for dynamic scheduling
     with multiprocessing.Pool(num_processes) as pool:
         all_u = pool.map(jacobi, zip(all_u0, all_interior_mask), chunksize=chunksize)
     
