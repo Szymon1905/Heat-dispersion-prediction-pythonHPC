@@ -13,4 +13,4 @@ source /dtu/projects/02613_2025/conda/conda_init.sh
 
 conda activate 02613
 
-python simulate_GRID.py 4
+python simulate_GRID.py 9987

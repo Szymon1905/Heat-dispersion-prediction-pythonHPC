@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from os.path import join
+import sys
 
 def load_data(load_dir, bid):
     SIZE = 512
@@ -30,7 +31,7 @@ def jacobi(u, interior_mask, max_iter, atol=1e-6):
 
 if __name__ == '__main__':
     LOAD_DIR = '/dtu/projects/02613_2025/data/modified_swiss_dwellings/'
-    BUILDING_ID = '9991'  # here goes building id to visualize
+    BUILDING_ID = sys.argv[1]
     
     u0, interior_mask = load_data(LOAD_DIR, BUILDING_ID)
     plot_grid(u0, 'Initial Condition', 'initial_condition.png')
