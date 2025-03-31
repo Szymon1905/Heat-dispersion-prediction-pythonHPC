@@ -1,0 +1,64 @@
+building_id, mean_temp, std_temp, pct_above_18, pct_below_15
+10000, 14.01233878811275, 6.367431059312565, 30.941014791508444, 55.542295034537624
+10009, 11.000135812436373, 5.811144379826625, 16.6712734948236, 74.9723590310584
+10014, 14.744169941950119, 7.037733284673848, 38.26367541377415, 52.80837116508215
+10019, 14.735524480624482, 7.030325006703675, 38.14915412864569, 52.92926826787113
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 24537615: <projecttest1> in cluster <dcc> Done
+
+Job <projecttest1> was submitted from host <hpclogin1> by user <s250372> in cluster <dcc> at Mon Mar 31 15:35:41 2025
+Job was executed on host(s) <4*n-62-11-68>, in queue <hpc>, as user <s250372> in cluster <dcc> at Mon Mar 31 15:35:42 2025
+</zhome/01/c/219552> was used as the home directory.
+</zhome/01/c/219552/PythonHPC/Project> was used as the working directory.
+Started at Mon Mar 31 15:35:42 2025
+Terminated at Mon Mar 31 15:36:35 2025
+Results reported at Mon Mar 31 15:36:35 2025
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J projecttest1
+#BSUB -q hpc
+#BSUB -W 10
+#BSUB -R "rusage[mem=2GB]"
+#BSUB -o oooo_%J.out
+#BSUB -e eeee_%J.err                  
+#BSUB -n 4                  # 4 cores  
+#BSUB -R "span[hosts=1]"      # 1 host 
+#BSUB -R "select[model == XeonGold6226R]"
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+
+conda activate 02613
+
+time python simulate_original.py 4
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   51.94 sec.
+    Max Memory :                                 52 MB
+    Average Memory :                             52.00 MB
+    Total Requested Memory :                     8192.00 MB
+    Delta Memory :                               8140.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   99 sec.
+    Turnaround time :                            54 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <eeee_24537615.err> for stderr output of this job.
+
