@@ -37,14 +37,14 @@ ax2 = fig.add_subplot(2, 2, 2)
 ax2.plot(stats.index, stats['pct_above_18'], '-o')
 ax2.set_xlabel('Index')
 ax2.set_ylabel('Percentage')
-ax2.set_title('Percentage Above 18')
+ax2.set_title('Percentage of Building Above 18')
 
 # Plot the pct_below_15
 ax3 = fig.add_subplot(2, 2, 4)
 ax3.plot(stats.index, stats['pct_below_15'], '-o')
 ax3.set_xlabel('Index')
 ax3.set_ylabel('Percentage')
-ax3.set_title('Percentage Below 15')
+ax3.set_title('Percentage of Building Below 15')
 
 plt.tight_layout()
 plt.show()

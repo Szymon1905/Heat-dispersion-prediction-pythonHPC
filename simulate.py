@@ -4,7 +4,7 @@ import numpy as np
 import csv
 
 LOCAL = True
-to_csv = False
+to_csv = True
 
 
 def load_data(load_dir, bid):
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         building_ids = f.read().splitlines()
 
     if len(sys.argv) < 2:
-        N = 5
+        N = 25
     else:
         N = int(sys.argv[1])
     building_ids = building_ids[:N]

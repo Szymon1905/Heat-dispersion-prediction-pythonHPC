@@ -14,7 +14,7 @@ conda activate 02613
 for n in 1 2 4 8 16
 do
     echo "Running with $n workers..."
-    /usr/bin/time -f "$n %e" python simulate_parallelized.py 50 $n 2>> timings.txt
+    /usr/bin/time -f "$n %e" python simulate_parallelized.py 50 $n 2>> timings_static_scheduling.txt
 done
 
 python plot_speedup.py
