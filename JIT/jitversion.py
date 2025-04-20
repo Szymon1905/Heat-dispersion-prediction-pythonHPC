@@ -15,11 +15,10 @@ def load_data(load_dir, bid):
 
 # Reference Jacobi implementation using plain NumPy
 def jacobi_numpy(u, interior_mask, max_iter, atol=1e-6):
-    """
-    Performs Jacobi relaxation using array slicing and boolean masking.
-    This serves as a reference for correctness and rough performance.
-    """
-    # a copy so we don't overwrite the original
+
+    # This is for reference to compare with Numba jit version
+
+    # a copy so no overwriting the original
     u = u.copy()
     for _ in range(max_iter):
         # Compute neighbor average for all interior points
@@ -27,29 +26,24 @@ def jacobi_numpy(u, interior_mask, max_iter, atol=1e-6):
             u[1:-1, :-2] + u[1:-1, 2:] +  # left, right
             u[:-2, 1:-1] + u[2:, 1:-1]     # up, down
         )
-        # Extract only masked (interior) updates
+        # Extracts only masked (interior) updates
         new_vals = u_new[interior_mask]
-        # Compute maximum change
+        # Computes maximum change
         delta = np.max(np.abs(u[1:-1, 1:-1][interior_mask] - new_vals))
-        # Write back only interior cells
+        # Writes back only interior cells
         u[1:-1, 1:-1][interior_mask] = new_vals
         # Check convergence
         if delta < atol:
             break
     return u
 
-# ----------------------------------------------------------------------------
-# Accelerated Jacobi using Numba JIT on CPU
-# ----------------------------------------------------------------------------
 @njit(parallel=True)
-def jacobi_numba(u, interior_mask, max_iter, atol):
-    """
-    Numba-compiled Jacobi relaxation.
+def jacobi_numba(u, interior_mask, max_iter, atol):\
 
-    - Uses two buffers `u` and `u_new` to avoid in-place conflicts.
-    - Parallelizes outer loop with `prange`.
-    - Accesses contiguous rows in inner loop for cache efficiency.
-    """
+    # 2 buffers `u` and `u_new` to avoid in-place conflicts.
+    # outer roop is parralized 
+    # Memory is accessed contiguously, (rows in inner loop) so it is cache efficient.
+ 
     n = u.shape[0]
     # Allocate secondary buffer
     u_new = u.copy()
@@ -59,10 +53,10 @@ def jacobi_numba(u, interior_mask, max_iter, atol):
     for _ in range(max_iter):
         delta = 0.0
         # Parallel over rows (1..n-2)
-        for i in prange(1, n - 1):
+        for i in prange(1, n - 1): # parallelized over rows
             # Row-major inner loop for contiguous memory access
             for j in range(1, n - 1):
-                if mask[i - 1, j - 1]:  # interior cell?
+                if mask[i - 1, j - 1]:  # check if it is interior cell?
                     # Average of 4 neighbors
                     val = 0.25 * (
                         u[i, j - 1] + u[i, j + 1] +  # left, right
@@ -85,67 +79,63 @@ def jacobi_numba(u, interior_mask, max_iter, atol):
 
     return u
 
-# ----------------------------------------------------------------------------
-# Compute summary statistics over the interior points
-# ----------------------------------------------------------------------------
+# sumamry stats to print
 def summary_stats(u, interior_mask):
-    """
-    Compute mean, std, and percentage of points above/below thresholds.
-
-    Returns:
-        dict with keys: mean_temp, std_temp, pct_above_18, pct_below_15
-    """
-    # Extract interior (unpadded) region and apply mask
-    grid = u[1:-1, 1:-1]
-    vals = grid[interior_mask]
+    u_interior = u[1:-1, 1:-1][interior_mask]
+    mean_temp = u_interior.mean()
+    std_temp = u_interior.std()
+    pct_above_18 = np.sum(u_interior > 18) / u_interior.size * 100
+    pct_below_15 = np.sum(u_interior < 15) / u_interior.size * 100
 
     return {
-        'mean_temp': np.mean(vals),
-        'std_temp': np.std(vals),
-        'pct_above_18': np.sum(vals > 18) / vals.size * 100,
-        'pct_below_15': np.sum(vals < 15) / vals.size * 100,
+        'mean_temp': mean_temp,
+        'std_temp': std_temp,
+        'pct_above_18': pct_above_18,
+        'pct_below_15': pct_below_15,
     }
 
-# ----------------------------------------------------------------------------
-# Main script: load, JIT-compile, run, and print CSV
-# ----------------------------------------------------------------------------
-if __name__ == '__main__':
-    # Directory containing data files
-    LOAD_DIR = '/dtu/projects/02613_2025/data/modified_swiss_dwellings/'
 
-    # Read building IDs
+# Main script: load, JIT-compile, run, and print CSV
+if __name__ == '__main__':
+    # Load data
+    LOAD_DIR = '/dtu/projects/02613_2025/data/modified_swiss_dwellings/'
     with open(join(LOAD_DIR, 'building_ids.txt'), 'r') as f:
         building_ids = f.read().splitlines()
 
-    # Number of buildings to process (default: 1)
-    N = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+    if len(sys.argv) < 2:
+        N = 1
+    else:
+        N = int(sys.argv[1])
+
     building_ids = building_ids[:N]
 
-    # Preload all initial states and masks
+    # Load floor plans
     all_u0 = np.empty((N, 514, 514), dtype=np.float64)
-    all_masks = np.empty((N, 512, 512), dtype=np.bool_)
-    for idx, bid in enumerate(building_ids):
-        u0, mask = load_data(LOAD_DIR, bid)
-        all_u0[idx] = u0
-        all_masks[idx] = mask
+    all_interior_mask = np.empty((N, 512, 512), dtype=np.bool_)
 
-    # Warm up Numba (first call triggers JIT compilation)
-    jacobi_numba(all_u0[0].copy(), all_masks[0], 1, 1e-6)
+    for i, bid in enumerate(building_ids):
+        u0, interior_mask = load_data(LOAD_DIR, bid)
+        all_u0[i] = u0
+        all_interior_mask[i] = interior_mask
+
+    # first call to trigger JIT compilation
+    jacobi_numba(all_u0[0].copy(), all_interior_mask[0], 1, 1e-6)
 
     # Parameters
     MAX_ITER = 20_000
     ABS_TOL = 1e-4
 
-    # Print CSV header
-    keys = ['mean_temp', 'std_temp', 'pct_above_18', 'pct_below_15']
-    print('building_id,' + ','.join(keys))
+    # Print summary statistics in CSV format
+    stat_keys = ['mean_temp', 'std_temp', 'pct_above_18', 'pct_below_15']
+    print('building_id, ' + ', '.join(stat_keys))  # CSV header
 
-    # Run JIT-accelerated Jacobi on each building
-    for bid, u0, mask in zip(building_ids, all_u0, all_masks):
-        # Run solver
-        u_sol = jacobi_numba(u0.copy(), mask, MAX_ITER, ABS_TOL)
-        # Compute stats
+    # jacobi with JIT run on all buildings
+    for bid, u0, mask in zip(building_ids, all_u0, all_interior_mask):
+        u_sol = jacobi_numba(u0.copy(), mask, MAX_ITER, ABS_TOL) # run JIT-compiled jacobi
         stats = summary_stats(u_sol, mask)
-        # Output as CSV row
-        row = [bid] + [f"{stats[k]:.6f}" for k in keys]
+        row = [bid] + [f"{stats[k]:.6f}" for k in stat_keys] #  CSV row
         print(','.join(row))
+
+    for bid, u, interior_mask in zip(building_ids, all_u0, all_interior_mask):
+        stats = summary_stats(u, interior_mask)
+        print(f"{bid},", ", ".join(str(stats[k]) for k in stat_keys))
