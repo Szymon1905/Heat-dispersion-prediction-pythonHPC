@@ -16,38 +16,65 @@ def load_data(load_dir, bid):
 # Reference Jacobi implementation using plain NumPy
 def jacobi_numpy(u, interior_mask, max_iter, atol=1e-6):
 
-    # This is for reference to compare with Numba jit version
+    # for comparison with Numba jit version
 
     # a copy so no overwriting the original
     u = u.copy()
     for _ in range(max_iter):
-        # Compute neighbor average for all interior points
+        # neighbor average for all interior points
         u_new = 0.25 * (
-            u[1:-1, :-2] + u[1:-1, 2:] +  # left, right
-            u[:-2, 1:-1] + u[2:, 1:-1]     # up, down
+            u[1:-1, :-2] + # left
+            u[1:-1, 2:] + # right
+            u[:-2, 1:-1] + # up
+            u[2:, 1:-1]     # down
         )
         # Extracts only masked (interior) updates
-        new_vals = u_new[interior_mask]
-        # Computes maximum change
-        delta = np.max(np.abs(u[1:-1, 1:-1][interior_mask] - new_vals))
-        # Writes back only interior cells
-        u[1:-1, 1:-1][interior_mask] = new_vals
-        # Check convergence
+        u_new_interior = u_new[interior_mask]
+        # maximum change
+        delta = np.max(np.abs(u[1:-1, 1:-1][interior_mask] - u_new_interior))
+    
+        u[1:-1, 1:-1][interior_mask] = u_new_interior
+
+        
         if delta < atol:
             break
     return u
+
+
+"""
+MY notes, ingnore these black people are 
+u = 
+[[ 0  0  0  0  0 ]
+ [ 0  1  1  1  0 ]
+ [ 0  1  1  1  0 ]
+ [ 0  1  1  1  0 ]
+ [ 0  0  0  0  0 ]]
+
+
+mask =
+[[ 1  1  1 ]
+ [ 1  1  1 ]
+ [ 1  1  1 ]]
+
+ (variable) all_interior_mask: _Array[tuple[int, int, int], numpy.bool[builtins.bool]]
+"""
+
+
 
 @njit(parallel=True)
 def jacobi_numba(u, interior_mask, max_iter, atol):\
 
     # 2 buffers `u` and `u_new` to avoid in-place conflicts.
-    # outer roop is parralized 
-    # Memory is accessed contiguously, (rows in inner loop) so it is cache efficient.
+    # outer roop is pararelized 
+    # Memory should be accessed contiguously, (rows in inner loop) so cache efficient.
+    # if i messed up something, message me on discord
  
     n = u.shape[0]
-    # Allocate secondary buffer
+
+    # buffer for new ones
     u_new = u.copy()
-    # Local references for speed
+
+    # Local references for speed, stackoverflow said so
     mask = interior_mask
 
     for _ in range(max_iter):
@@ -56,24 +83,27 @@ def jacobi_numba(u, interior_mask, max_iter, atol):\
         for i in prange(1, n - 1): # parallelized over rows
             # Row-major inner loop for contiguous memory access
             for j in range(1, n - 1):
-                if mask[i - 1, j - 1]:  # check if it is interior cell?
-                    # Average of 4 neighbors
-                    val = 0.25 * (
-                        u[i, j - 1] + u[i, j + 1] +  # left, right
-                        u[i - 1, j] + u[i + 1, j]     # up, down
+                if mask[i - 1, j - 1]:  # check whether position is an interior cell, offsetting because border, 
+                   
+                    average = 0.25 * (  # Average of 4 neighbors
+                        u[i, j - 1] +  # left
+                        u[i, j + 1] +  # right
+                        u[i - 1, j] +  # up
+                        u[i + 1, j]    # down
                     )
-                    u_new[i, j] = val
-                    # Track max difference for convergence
-                    d = abs(val - u[i, j])
+                    u_new[i, j] = average
+                    # max diff for convergence
+                    d = abs(average - u[i, j])
                     if d > delta:
                         delta = d
                 else:
-                    # Preserve boundary & exterior values
+                    # copy unchanged boundary & exterior values, (they are not changed)
                     u_new[i, j] = u[i, j]
 
-        # Swap buffers
+        # Swap
         u, u_new = u_new, u
-        # Check convergence
+
+        # convergence
         if delta < atol:
             break
 
@@ -129,9 +159,10 @@ if __name__ == '__main__':
     stat_keys = ['mean_temp', 'std_temp', 'pct_above_18', 'pct_below_15']
     print('building_id, ' + ', '.join(stat_keys))  # CSV header
 
+    start = time.perf_counter()
     # jacobi with JIT run on all buildings
     for bid, u0, mask in zip(building_ids, all_u0, all_interior_mask):
-        u_sol = jacobi_numba(u0.copy(), mask, MAX_ITER, ABS_TOL) # run JIT-compiled jacobi
+        u_sol = jacobi_numba(u0.copy(), mask, MAX_ITER, ABS_TOL) 
         stats = summary_stats(u_sol, mask)
         row = [bid] + [f"{stats[k]:.6f}" for k in stat_keys] #  CSV row
         print(','.join(row))
@@ -139,3 +170,6 @@ if __name__ == '__main__':
     for bid, u, interior_mask in zip(building_ids, all_u0, all_interior_mask):
         stats = summary_stats(u, interior_mask)
         print(f"{bid},", ", ".join(str(stats[k]) for k in stat_keys))
+
+    end = time.perf_counter()
+    print(f"Execution time: {end - start:.2f} seconds")
