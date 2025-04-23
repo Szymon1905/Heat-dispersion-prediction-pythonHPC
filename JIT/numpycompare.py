@@ -2,6 +2,7 @@ from os.path import join
 import sys
 import time
 import numpy as np
+import os
 
 def load_data(load_dir, bid):
     SIZE = 512
@@ -50,7 +51,10 @@ def summary_stats(u, interior_mask):
 
 if __name__ == '__main__':
     # Load data
-    LOAD_DIR = '/dtu/projects/02613_2025/data/modified_swiss_dwellings/'
+    # LOAD_DIR = '/dtu/projects/02613_2025/data/modified_swiss_dwellings/'
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    LOAD_DIR = os.path.join(SCRIPT_DIR, '..', 'buildings')
+
     with open(join(LOAD_DIR, 'building_ids.txt'), 'r') as f:
         building_ids = f.read().splitlines()
 

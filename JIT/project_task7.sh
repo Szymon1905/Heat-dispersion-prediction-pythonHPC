@@ -20,11 +20,11 @@ export NUMBA_NUM_THREADS=$OMP_NUM_THREADS
 export NUMBA_THREADING_LAYER=omp
 export MKL_NUM_THREADS=1
 
-python jitversion.py 50 > task7resultsNumba.txt
+python jitversion.py 10 > task7resultsNumba.txt
 
 
 
-python numpycompare.py 50 > task7resultsNumpy.txt
+python numpycompare.py 10 > task7resultsNumpy.txt
 
 
 

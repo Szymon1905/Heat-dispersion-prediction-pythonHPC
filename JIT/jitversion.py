@@ -3,7 +3,7 @@ import sys
 import time
 import numpy as np
 from numba import njit, prange
-
+import os
 
 def load_data(load_dir, bid):
     SIZE = 512
@@ -79,12 +79,10 @@ def jacobi_numba(u, interior_mask, max_iter, atol):\
 
     for _ in range(max_iter):
         delta = 0.0
-        # Parallel over rows (1..n-2)
-        for i in prange(1, n - 1): # parallelized over rows
-            # Row-major inner loop for contiguous memory access
-            for j in range(1, n - 1):
+        for i in range(1, n - 1): # Outer: rows      # can this be parallelized over rows with prange ?
+            # columns inside row loop  for contiguous memory access
+            for j in range(1, n - 1): # Inner: columns
                 if mask[i - 1, j - 1]:  # check whether position is an interior cell, offsetting because border, 
-                   
                     average = 0.25 * (  # Average of 4 neighbors
                         u[i, j - 1] +  # left
                         u[i, j + 1] +  # right
@@ -128,7 +126,12 @@ def summary_stats(u, interior_mask):
 # Main script: load, JIT-compile, run, and print CSV
 if __name__ == '__main__':
     # Load data
-    LOAD_DIR = '/dtu/projects/02613_2025/data/modified_swiss_dwellings/'
+    # LOAD_DIR = '/dtu/projects/02613_2025/data/modified_swiss_dwellings/'
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    LOAD_DIR = os.path.join(SCRIPT_DIR, '..', 'buildings')
+    # LOAD_DIR = '../buildings/'
+
+
     with open(join(LOAD_DIR, 'building_ids.txt'), 'r') as f:
         building_ids = f.read().splitlines()
 
@@ -167,9 +170,11 @@ if __name__ == '__main__':
         row = [bid] + [f"{stats[k]:.6f}" for k in stat_keys] #  CSV row
         print(','.join(row))
 
+    """
     for bid, u, interior_mask in zip(building_ids, all_u0, all_interior_mask):
         stats = summary_stats(u, interior_mask)
         print(f"{bid},", ", ".join(str(stats[k]) for k in stat_keys))
-
+    """
+    
     end = time.perf_counter()
-    print(f"Execution time: {end - start:.2f} seconds")
+    print(f"Execution time: {end - start:.4f} seconds")
