@@ -1,0 +1,66 @@
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 24808167: <gpuALL> in cluster <dcc> Done
+
+Job <gpuALL> was submitted from host <hpclogin1> by user <s250372> in cluster <dcc> at Sat Apr 26 16:15:45 2025
+Job was executed on host(s) <4*n-62-18-13>, in queue <gpua100>, as user <s250372> in cluster <dcc> at Sat Apr 26 16:24:25 2025
+</zhome/01/c/219552> was used as the home directory.
+</zhome/01/c/219552/PythonHPC/Project/JIT> was used as the working directory.
+Started at Sat Apr 26 16:24:25 2025
+Terminated at Sat Apr 26 17:45:47 2025
+Results reported at Sat Apr 26 17:45:47 2025
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash
+#BSUB -J gpuALL
+#BSUB -q gpua100
+#BSUB -W 12:00
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=4GB]"
+#BSUB -gpu "num=1:mode=exclusive_process"
+#BSUB -R "select[gpu80gb]"
+#BSUB -n 4
+#BSUB -o gpuALL_%J.out
+#BSUB -e gpuALL_%J.err
+
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate 02613
+
+python cudaversion.py 4571 > CUDAresultsALL.csv
+
+
+
+
+
+
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   4797.55 sec.
+    Max Memory :                                 10526 MB
+    Average Memory :                             10273.92 MB
+    Total Requested Memory :                     16384.00 MB
+    Delta Memory :                               5858.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                7
+    Run time :                                   4883 sec.
+    Turnaround time :                            5402 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <gpuALL_24808167.err> for stderr output of this job.
+
