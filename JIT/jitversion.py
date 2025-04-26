@@ -42,7 +42,7 @@ def jacobi_numpy(u, interior_mask, max_iter, atol=1e-6):
 
 
 """
-MY notes, ingnore these black people are 
+MY notes, ingnore these 
 u = 
 [[ 0  0  0  0  0 ]
  [ 0  1  1  1  0 ]
