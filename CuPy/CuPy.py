@@ -3,10 +3,8 @@ import sys
 import csv
 import cupy as cp
 
-LOCAL = True
-if (len(sys.argv) > 2):
-    CSV = True if sys.argv[2].lower() == "y" else False
-CSV = False
+LOCAL = False
+CSV = True
 
 
 def load_data(load_dir, bid):

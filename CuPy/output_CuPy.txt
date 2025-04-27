@@ -1,0 +1,67 @@
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 24809661: <CuPy_test> in cluster <dcc> Done
+
+Job <CuPy_test> was submitted from host <hpclogin1> by user <s204608> in cluster <dcc> at Sun Apr 27 09:23:37 2025
+Job was executed on host(s) <4*n-62-12-22>, in queue <c02613>, as user <s204608> in cluster <dcc> at Sun Apr 27 09:23:37 2025
+</zhome/30/0/156302> was used as the home directory.
+</zhome/30/0/156302/Documents/02613_PyHPC> was used as the working directory.
+Started at Sun Apr 27 09:23:37 2025
+Terminated at Sun Apr 27 09:24:04 2025
+Results reported at Sun Apr 27 09:24:04 2025
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+
+#!/bin/bash
+#BSUB -J CuPy_test
+#BSUB -q c02613
+#BSUB -W 0:30
+#BSUB -R "span[hosts=1]"
+#BSUB -R "rusage[mem=1GB]"
+#BSUB -gpu "num=1:mode=exclusive_process"
+#BSUB -n 4
+#BSUB -o gpujob_%J.out
+#BSUB -e gpujob_%J.err
+
+source /dtu/projects/02613_2025/conda/conda_init.sh
+conda activate 02613
+
+time python CuPy.py 10 > CuPyresults10.csv
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   25.25 sec.
+    Max Memory :                                 -
+    Average Memory :                             -
+    Total Requested Memory :                     4096.00 MB
+    Delta Memory :                               -
+    Max Swap :                                   -
+    Max Processes :                              -
+    Max Threads :                                -
+    Run time :                                   0 sec.
+    Turnaround time :                            27 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <gpujob_24809661.err> for stderr output of this job.
+
