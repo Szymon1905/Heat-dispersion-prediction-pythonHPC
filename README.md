@@ -5,4 +5,4 @@ Authors:
 * Kristine Rigmor Agergaard Andersen
 * Nojan Rezvani
 * Szymon Borzdynski
-* Rasmus Bredahl Kindler
+
