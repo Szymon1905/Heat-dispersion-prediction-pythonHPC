@@ -6,3 +6,8 @@ Authors:
 * Nojan Rezvani
 * Szymon Borzdynski
 
+To run, we recommend using python virtual envirnoment and
+instaling packages using
+```
+pip install -r requirements.txt
+```
