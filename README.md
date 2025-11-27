@@ -2,9 +2,10 @@
 Repository for mini-project for Python high performance computing course at DTU
 
 Authors:
+* Szymon Borzdynski
 * Kristine Rigmor Agergaard Andersen
 * Nojan Rezvani
-* Szymon Borzdynski
+
 
 To run, we recommend using python virtual envirnoment and
 instaling packages using
